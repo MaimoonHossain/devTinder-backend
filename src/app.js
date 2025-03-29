@@ -3,7 +3,7 @@ const connectDB = require('./config/database'); // Ensure this is the correct pa
 const User = require('./models/user');
 const app = express();
 
-app.post('/signup', (req, res) => {
+app.post('/signup', async (req, res) => {
   const userObj = {
     firstName: 'Maimoon',
     lastName: 'Ali',
@@ -15,20 +15,13 @@ app.post('/signup', (req, res) => {
 
   const user = new User(userObj);
 
-  user
-    .save()
-    .then(() => {
-      res.status(201).json({
-        message: 'User created successfully!',
-        user: user,
-      });
-    })
-    .catch((error) => {
-      res.status(500).json({
-        message: 'Error creating user',
-        error: error.message,
-      });
-    });
+  try {
+    const savedUser = await user.save();
+    res.status(201).json(savedUser);
+  } catch (error) {
+    console.error('Error saving user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 connectDB()
