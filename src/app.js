@@ -1,4 +1,5 @@
 const express = require('express');
+const validator = require('validator');
 const connectDB = require('./config/database'); // Ensure this is the correct path to your database config
 const User = require('./models/user');
 const app = express();
@@ -6,23 +7,15 @@ const app = express();
 app.use(express.json()); // Middleware to parse JSON requests
 
 app.post('/signup', async (req, res) => {
-  const userObj = {
-    firstName: 'Maimoon',
-    lastName: 'Ali',
-    emaildId: 'maimoon@gmail.com',
-    password: '123456',
-    gender: 'Male',
-    age: 25,
-  };
+  const data = req.body;
 
-  const user = new User(userObj);
-
+  const user = new User(data);
   try {
     const savedUser = await user.save();
     res.status(201).json(savedUser);
   } catch (error) {
     console.error('Error saving user:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error });
   }
 });
 
@@ -73,12 +66,38 @@ app.delete('/user', async (req, res) => {
   }
 });
 
-app.patch('/user', async (req, res) => {
-  const { userId, ...data } = req.body;
+app.patch('/user/:userId', async (req, res) => {
+  const userId = req.params?.userId;
+  const data = req.body;
+
+  const allowedUpdates = [
+    'firstName',
+    'lastName',
+    'password',
+    'age',
+    'photoUrl',
+    'skills',
+  ];
+
+  const isValidOperation = Object.keys(data).every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) {
+    return res.status(400).json({ message: 'Invalid updates!' });
+  }
+
+  if (data?.skills.length > 5) {
+    return res.status(400).json({ message: 'Skills should not exceed 5' });
+  }
+
+  if (data?.age < 18) {
+    return res.status(400).json({ message: 'Age should be 18 or above' });
+  }
 
   try {
     const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
       new: true,
+      runValidators: true,
     });
     res.status(200).json({ message: 'User updated successfully', updatedUser });
   } catch (error) {
