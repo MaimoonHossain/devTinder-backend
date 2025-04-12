@@ -1,12 +1,18 @@
 const express = require('express');
-const validator = require('validator');
-const bcrypt = require('bcrypt');
+
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database'); // Ensure this is the correct path to your database config
 const User = require('./models/user');
 const { validateSignUpData } = require('./utils/validation');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config(); // Load environment variables from .env file
+const { userAuth } = require('./middlewares/auth');
+
 const app = express();
 
 app.use(express.json()); // Middleware to parse JSON requests
+app.use(cookieParser()); // Middleware to parse cookies
 
 app.post('/signup', async (req, res) => {
   const data = req.body;
@@ -50,9 +56,17 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password!' });
     }
 
-    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    // Compare the password with the hashed password in the database
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
+      // Set a cookie with the user ID (or any other identifier)
+      const token = await user.getJWT();
+
+      res.cookie('token', token, {
+        expires: new Date(Date.now() + 3600000),
+        httpOnly: true,
+      });
       return res.status(200).json({ message: 'Login Successful!' });
     } else {
       return res.status(401).json({ message: 'Invalid credentials!' });
@@ -63,9 +77,27 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Profile Api
+
+app.get('/profile', userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/sendConnectionRequest', userAuth, async (req, res) => {
+  console.log('Send Connection Request:', req.body);
+
+  res.status(200).json({ message: 'Connection request sent!' });
+});
+
 //Get user by email
 
-app.get('/user', async (req, res) => {
+app.get('/user', userAuth, async (req, res) => {
   const emailId = req.body.emailId;
 
   console.log('Email ID:', emailId);
