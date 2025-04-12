@@ -3,6 +3,7 @@ const { validateSignUpData } = require('../utils/validation');
 const User = require('../models/user');
 const dotenv = require('dotenv');
 dotenv.config(); // Load environment variables from .env file
+const bcrypt = require('bcrypt');
 
 const authRouter = express.Router();
 
@@ -23,6 +24,7 @@ authRouter.post('/signup', async (req, res) => {
       gender: data.gender,
       photoUrl: data.photoUrl,
       skills: data.skills,
+      about: data.about,
     });
     const savedUser = await user.save();
     res.status(201).json(savedUser);
@@ -67,6 +69,11 @@ authRouter.post('/login', async (req, res) => {
     console.error('Error logging in:', error);
     res.status(500).json({ message: error.message });
   }
+});
+
+authRouter.get('/logout', (req, res) => {
+  res.clearCookie('token'); // Clear the cookie
+  res.status(200).json({ message: 'Logout successful!' });
 });
 
 module.exports = authRouter;

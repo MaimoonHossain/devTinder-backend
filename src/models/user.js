@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
+    about: { 
+      type: String,
+      default: 'No bio provided',
+    },
     skills: {
       type: [String],
       default: [],
