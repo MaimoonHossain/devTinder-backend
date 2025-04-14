@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-    about: { 
+    about: {
       type: String,
       default: 'No bio provided',
     },
@@ -69,6 +69,8 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.index({ firstName: 1, lastName: 1 }, { unique: true });
 
 userSchema.methods.getJWT = async function () {
   const user = this;
