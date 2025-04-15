@@ -37,13 +37,27 @@ userRouter.get('/user/connections', userAuth, async (req, res) => {
         { fromUserId: loggedInUser._id, status: 'accepted' },
         { toUserId: loggedInUser._id, status: 'accepted' },
       ],
-    }).populate('fromUserId', USER_SAFE_FIELDS);
+    })
+      .populate('fromUserId', USER_SAFE_FIELDS)
+      .populate('toUserId', USER_SAFE_FIELDS);
 
     if (!connections || connections.length === 0) {
       return res.status(404).json({ message: 'No connections found.' });
     }
 
-    return res.status(200).json({ message: 'Connections found.', connections });
+    // Filter out the logged-in user from the connections
+    const filteredConnections = connections.map((connection) => {
+      if (
+        connection.fromUserId._id.toString() === loggedInUser._id.toString()
+      ) {
+        return connection.toUserId;
+      }
+      return connection.fromUserId;
+    });
+
+    return res
+      .status(200)
+      .json({ message: 'Connections found.', filteredConnections });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
