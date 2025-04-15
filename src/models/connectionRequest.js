@@ -37,6 +37,7 @@ connectionRequestSchema.pre('save', async function (next) {
         { fromUserId, toUserId },
         { fromUserId: toUserId, toUserId: fromUserId },
       ],
+      _id: { $ne: connectionRequest._id },
     });
 
     if (isDuplicate) {
