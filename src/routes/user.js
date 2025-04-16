@@ -63,4 +63,51 @@ userRouter.get('/user/connections', userAuth, async (req, res) => {
   }
 });
 
+userRouter.get('/feed', userAuth, async (req, res) => {
+  try {
+    // Already connected poeples, own card and who was ignored or requested already.
+    // User should see all the user cards except
+    // 0. his own card
+    // 1. his connections
+    // 2. Already ignored people
+    // 3. already sent the connection request
+    const loggedInUser = req.user;
+    const skip = parseInt(req.query.skip) || 0;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = Math.min(limit, 50); // Limit to a maximum of 100
+
+    // Find all connection requests (sent + received)
+    const connectionRequests = await ConnectionRequest.find({
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select('fromUserId toUserId status');
+
+    const hideUsersFromFeed = new Set();
+
+    connectionRequests.forEach((request) => {
+      hideUsersFromFeed.add(request.fromUserId.toString());
+      hideUsersFromFeed.add(request.toUserId.toString());
+    });
+
+    const query = {
+      $and: [
+        { _id: { $nin: Array.from(hideUsersFromFeed) } },
+        { _id: { $ne: loggedInUser._id } },
+      ],
+    };
+
+    const [users, totalCount] = await Promise.all([
+      User.find(query).select(USER_SAFE_FIELDS).limit(limit).skip(skip),
+      User.countDocuments(query),
+    ]);
+
+    res.send({
+      message: users.length > 0 ? 'Users found.' : 'No users found.',
+      users,
+      totalCount,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = userRouter;
