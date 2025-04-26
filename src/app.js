@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database'); // Ensure this is the correct path to your database config
@@ -16,6 +17,7 @@ const userRouter = require('./routes/user');
 const user = require('./models/user');
 
 const app = express();
+app.use('/uploads', express.static('uploads'));
 
 app.use(
   cors({

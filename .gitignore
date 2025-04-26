@@ -1,3 +1,4 @@
 node_modules
 .env
 appList.md
+/uploads/
