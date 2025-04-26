@@ -2,6 +2,7 @@ const express = require('express');
 const { userAuth } = require('../middlewares/auth');
 const { validateProfileEditData } = require('../utils/validation');
 const upload = require('../middlewares/upload');
+const joinUrl = require('../utils/joinUrl');
 
 const profileRouter = express.Router();
 
@@ -41,7 +42,11 @@ profileRouter.patch(
       // If a new photo was uploaded
       if (req.file) {
         // Save the file path (or a full URL if you're serving uploads via static route)
-        loggedInUser.photoUrl = `/uploads/${req.file.filename}`;
+        //using the env
+        loggedInUser.photoUrl = joinUrl(
+          process.env.MEDIA_URL,
+          'uploads/' + req.file.filename
+        );
       }
 
       const updatedUser = await loggedInUser.save();

@@ -50,14 +50,6 @@ const userSchema = new mongoose.Schema(
     photoUrl: {
       type: String,
       default: 'https://example.com/default-profile-pic.jpg',
-      validate(value) {
-        if (
-          !validator.isURL(value) && // If it's not a full URL
-          !/^\/uploads\/.+$/.test(value) // AND also not starting with "/uploads/filename"
-        ) {
-          throw new Error('Invalid URL format for photoUrl');
-        }
-      },
     },
     about: {
       type: String,
