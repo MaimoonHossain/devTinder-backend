@@ -17,7 +17,7 @@ userRouter.get('/user/requests/received', userAuth, async (req, res) => {
     }).populate('fromUserId', USER_SAFE_FIELDS);
 
     if (!connectionRequests || connectionRequests.length === 0) {
-      return res.status(404).json({ message: 'No connection requests found.' });
+      return res.status(200).json({ message: 'No connection requests found.' });
     }
 
     return res
@@ -42,7 +42,7 @@ userRouter.get('/user/connections', userAuth, async (req, res) => {
       .populate('toUserId', USER_SAFE_FIELDS);
 
     if (!connections || connections.length === 0) {
-      return res.status(404).json({ message: 'No connections found.' });
+      return res.status(200).json({ message: 'No connections found.' });
     }
 
     // Filter out the logged-in user from the connections
